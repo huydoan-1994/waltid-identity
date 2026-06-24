@@ -761,6 +761,12 @@ open class CIProvider(
             }
         }
 
+        // Persist holder DID binding from the first issuance request (if provided)
+        val expectedHolderDid = issuanceRequests.firstOrNull()?.expectedHolderDid
+        val holderBindingParams: Map<String, JsonElement>? = expectedHolderDid?.let {
+            mapOf("expectedHolderDid" to JsonPrimitive(it))
+        }
+
         return@runBlocking IssuanceSession(
             id = sessionId,
             authorizationRequest = null,
@@ -769,7 +775,8 @@ open class CIProvider(
             txCode = txCode,
             txCodeValue = txCodeValue,
             credentialOffer = credentialOfferBuilder.build(),
-            callbackUrl = callbackUrl
+            callbackUrl = callbackUrl,
+            customParameters = holderBindingParams
         ).also {
             putSession(it.id, it, expiresIn)
         }
@@ -836,6 +843,9 @@ open class CIProvider(
                 errorCode = CredentialErrorCode.invalid_request,
                 message = validationResult.message
             )
+
+            // Validate holder DID binding (rejects if offer was bound to a different holder)
+            HolderBindingPlugin.validateHolderBinding(session, credentialRequest)
 
             // create credential result
             val credentialResult = generateCredential(

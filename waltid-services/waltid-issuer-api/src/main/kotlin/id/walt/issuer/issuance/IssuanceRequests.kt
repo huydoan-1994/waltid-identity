@@ -128,6 +128,14 @@ data class IssuanceRequest(
      * Used to set the `validUntil` field in the MSO ValidityInfo.
      */
     val mdocValidityDays: Int? = null,
+
+    /**
+     * Optional holder DID to bind this credential offer to a specific holder.
+     * When set, only the wallet proving possession of the corresponding private key
+     * can redeem the offer. Validated at credential endpoint via JWK Thumbprint (RFC 7638).
+     * Supports did:jwk method.
+     */
+    val expectedHolderDid: String? = null,
 ) {
 
     init {
