@@ -1,29 +1,33 @@
 # NOTE: Prefer Gradle Ktor/Jib tasks (publishImageToLocalRegistry/publishImage) for builds.
 # This Dockerfile is for manual/custom Docker workflows.
-FROM gradle:latest AS pre-cache
+# Uses Eclipse Temurin JDK 21 + Gradle Wrapper (pinned in gradle-wrapper.properties)
+# to avoid version incompatibilities with Android Gradle Plugin.
+
+FROM eclipse-temurin:21-jdk AS pre-cache
 COPY . /home/src
 COPY gradle.properties settings.gradle.kts /home/app/
 COPY build-logic /home/app/build-logic
 COPY gradle /home/app/gradle
+COPY gradlew /home/app/gradlew
+RUN chmod +x /home/app/gradlew
 RUN cd /home/src && \
     find . -name "build.gradle.kts" -exec sh -c 'mkdir -p /home/app/$(dirname "$1"); cp "$1" /home/app/$1' _ {} \;
 
 # Stage 1: Cache Gradle dependencies
-FROM gradle:latest AS cache
+FROM eclipse-temurin:21-jdk AS cache
 RUN mkdir -p /home/gradle/cache_home
 ENV GRADLE_USER_HOME=/home/gradle/cache_home
 COPY --from=pre-cache /home/app/ /home/gradle/app/
 WORKDIR /home/gradle/app/waltid-services/waltid-issuer-api
-RUN gradle dependencies --no-daemon
+RUN ../../gradlew dependencies --no-daemon
 
 # Stage 2: Build Application
-FROM gradle:latest AS build
+FROM eclipse-temurin:21-jdk AS build
 COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
-COPY --chown=gradle:gradle . /home/gradle/src
+COPY . /home/gradle/src
+RUN chmod +x /home/gradle/src/gradlew
 WORKDIR /home/gradle/src/waltid-services/waltid-issuer-api
-# Build the fat JAR, Gradle also supports shadow
-# and boot JAR by default.
-RUN gradle buildFatJar --no-daemon
+RUN ../../gradlew buildFatJar --no-daemon
 
 # Stage 3: Create the Runtime Image
 FROM amazoncorretto:22 AS runtime
