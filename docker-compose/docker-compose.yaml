@@ -20,12 +20,14 @@ services:
       - ./wallet-api/data:/waltid-wallet-api/data
 
   issuer-api:
-    image: ${IMAGE_PREFIX}waltid/issuer-api:${VERSION_TAG:-latest}
+    build:
+      context: ../
+      dockerfile: waltid-services/waltid-issuer-api/Dockerfile
+    image: waltid-issuer-api:holder-binding
     profiles:
       - services
       - identity
       - all
-    pull_policy: missing
     depends_on:
       - caddy
     env_file:
