@@ -33,11 +33,11 @@ services:
     env_file:
       - .env
     environment:
-      # AWS KMS signing (waltid-crypto-aws default credential chain — static IAM user keys in .env)
+      # Static IAM user keys only — do NOT set AWS_SESSION_TOKEN unless using STS/temporary creds.
+      # Empty AWS_SESSION_TOKEN breaks Kotlin AWS SDK ("security token is invalid") while aws cli still works.
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
-      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
-      AWS_REGION: ${AWS_REGION:-af-south-1}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
     extra_hosts:
       - "$SERVICE_HOST:host-gateway"
     volumes:
