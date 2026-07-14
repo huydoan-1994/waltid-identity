@@ -32,6 +32,12 @@ services:
       - caddy
     env_file:
       - .env
+    environment:
+      # AWS KMS signing (waltid-crypto-aws default credential chain — static IAM user keys in .env)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      AWS_REGION: ${AWS_REGION:-af-south-1}
     extra_hosts:
       - "$SERVICE_HOST:host-gateway"
     volumes:
